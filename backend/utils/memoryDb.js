@@ -156,19 +156,15 @@ const hashPasswords = async () => {
 hashPasswords();
 
 // Create default anomaly list on startup
-const generateInitialAnomalies = () => {
-  const anomalyService = require('../services/anomalyService');
-  inMemTelemetries.forEach(telemetry => {
-    const list = anomalyService.detectTelemetryAnomalies(telemetry.assetId, telemetry);
-    list.forEach(a => {
-      inMemAnomalies.push({
-        _id: `anom_${Math.random().toString(36).substr(2, 9)}`,
-        resolved: false,
-        timestamp: new Date(),
-        ...a
-      });
-    });
-  });
+const generateInitialAnomalies = async () => {
+  try {
+    const anomalyService = require('../services/anomalyService');
+    for (const telemetry of inMemTelemetries) {
+      await anomalyService.detectTelemetryAnomalies(telemetry.assetId, telemetry);
+    }
+  } catch (err) {
+    console.error('Error generating initial anomalies:', err);
+  }
 };
 // Defer generation slightly to ensure services are loaded
 setTimeout(generateInitialAnomalies, 500);
@@ -252,6 +248,16 @@ const memoryStore = {
         return inMemAnomalies[idx];
       }
       return null;
+    },
+    create: async (anom) => {
+      const newAnom = { 
+        _id: anom._id || `anom_${Math.random().toString(36).substr(2, 9)}`, 
+        resolved: false, 
+        timestamp: new Date(), 
+        ...anom 
+      };
+      inMemAnomalies.push(newAnom);
+      return newAnom;
     }
   },
 

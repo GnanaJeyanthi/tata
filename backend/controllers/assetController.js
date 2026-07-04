@@ -115,7 +115,7 @@ const getAssetById = async (req, res) => {
       success: true,
       data: {
         asset: {
-          ...asset._doc,
+          ...(asset._doc || asset),
           status: predictions.status,
           healthScore: predictions.overallHealth,
         },
